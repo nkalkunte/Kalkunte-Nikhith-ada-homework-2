@@ -1,0 +1,67 @@
+---
+title: "HW2-Kalkunte"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r}
+library(tidyverse)
+library(magrittr)
+library(mosaic)
+
+```
+
+Challenge 1
+```{r}
+d = read_csv("https://raw.githubusercontent.com/difiore/ada-2021-datasets/master/IMDB-movies.csv")
+d = as_tibble(d)
+
+d %>% 
+  filter(startYear>=1920 & startYear<=1979 & runtimeMinutes >= 60 & runtimeMinutes <= 180) %>% 
+  mutate(decade = paste0(substr(startYear,3,3),"0s")) -> d_filtered
+
+ggplot(d_filtered, aes(x = runtimeMinutes)) + geom_histogram() + facet_wrap(vars(decade))
+
+d_filtered %>%
+  group_by(decade) %>%
+  summarize(mean = mean(runtimeMinutes),sd = sd(runtimeMinutes)) -> results
+
+d_filtered %>%
+  group_by(decade) %>%
+  sample_n(100, replace = FALSE) %>%
+  summarize(mean = mean(runtimeMinutes),sd = sd(runtimeMinutes)) -> sample_res
+
+sample_res$se = sample_res$sd/10
+
+```
+COMPARE SMAPLE results to true results....
+
+```{r}
+reps = 1000
+n = 100
+d_filtered %>%
+  group_by(decade) %>%
+  rerun(reps,  ->samp_dist_mean
+samp_dist_mean = do(reps) * mean(~runtimeMinutes, data = sample_n(d_filtered$decade, size = n, replace = FALSE)))
+s
+
+samp_dist_median = do(reps) * median(~runtimeMinutes, data = sample_n(d_filtered %>% group_by(decade), size = 100, replace = FALSE))
+
+```
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
