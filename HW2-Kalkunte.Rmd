@@ -58,7 +58,7 @@ reps = 1000
 n = 100
 for (i in names(table(d_filtered$decade))){
   subset = d_filtered[d_filtered$decade==i,]
-  A = do(reps)*summarize(.data = sample_n(subset, size = n, replace = FALSE),mean = mean(runtimeMinutes),sd = sd(runtimeMinutes)) 
+  A = do(reps)*summarize(.data = sample_n(subset, size = n, replace = FALSE), mean = mean(runtimeMinutes),sd = sd(runtimeMinutes)) 
   assign(paste0(i,"_sampMean"),A)
   }
 ```
@@ -66,28 +66,36 @@ for (i in names(table(d_filtered$decade))){
 ##Sampling Distributions
 ```{r}
 #20s
-('20sMean' = mean(`20s_sampMean`$mean))
+('20sMean' = summarize(.data = `20s_sampMean`, mean = mean(`20s_sampMean`$mean), sd = sd(`20s_sampMean`$mean)))
 hist(`20s_sampMean`$mean, main = "Histogram of 20s Sampling Distrubtion", xlab = "Mean runtime (min.)")
 #30s
-('30sMean' = mean(`30s_sampMean`$mean))
+('30sMean' = summarize(.data = `30s_sampMean`, mean = mean(`30s_sampMean`$mean), sd = sd(`30s_sampMean`$mean)))
 hist(`30s_sampMean`$mean, main = "Histogram of 30s Sampling Distrubtion", xlab = "Mean runtime (min.)")
 #40s
-('40sMean' = mean(`40s_sampMean`$mean))
+('40sMean' = summarize(.data = `40s_sampMean`, mean = mean(`40s_sampMean`$mean), sd = sd(`40s_sampMean`$mean)))
 hist(`40s_sampMean`$mean, main = "Histogram of 40s Sampling Distrubtion", xlab = "Mean runtime (min.)")
 #50s
-('50sMean' = mean(`50s_sampMean`$mean))
+('50sMean' = summarize(.data = `50s_sampMean`, mean = mean(`50s_sampMean`$mean), sd = sd(`50s_sampMean`$mean)))
 hist(`50s_sampMean`$mean, main = "Histogram of 50s Sampling Distrubtion", xlab = "Mean runtime (min.)")
 #60s
-('60sMean' = mean(`60s_sampMean`$mean))
+('60sMean' = summarize(.data = `60s_sampMean`, mean = mean(`60s_sampMean`$mean), sd = sd(`60s_sampMean`$mean)))
 hist(`60s_sampMean`$mean, main = "Histogram of 60s Sampling Distrubtion", xlab = "Mean runtime (min.)")
 #70s
-('70sMean' = mean(`70s_sampMean`$mean))
+('70sMean' = summarize(.data = `70s_sampMean`, mean = mean(`70s_sampMean`$mean), sd = sd(`70s_sampMean`$mean)))
 hist(`70s_sampMean`$mean, main = "Histogram of 70s Sampling Distrubtion", xlab = "Mean runtime (min.)")
 ```
 Comment on shape of distributions
 
 ```{r}
+samplingSE = c(`20sMean`$sd,`30sMean`$sd,`40sMean`$sd,`50sMean`$sd,`60sMean`$sd,`70sMean`$sd)
+sErrors = cbind(results$se,sample_res$se,samplingSE)
+rownames(sErrors) = names(table(d_filtered$decade))
+colnames(sErrors) = c("True Population","100 Samples","Sampling Dist.")
+sErrors
+```
+Comment on SEs - Sampling distribution looks to be fairly off...
 
+#Challenge 2
+```{r}
 
 ```
-
