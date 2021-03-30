@@ -7,29 +7,28 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## R Markdown
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r}
+```{r, echo = FALSE}
 library(tidyverse)
 library(magrittr)
 library(mosaic)
+library(knitr)
+library(kableExtra)
 
 ```
 
-Challenge 1
+#Challenge 1
 ```{r}
-d = read_csv("https://raw.githubusercontent.com/difiore/ada-2021-datasets/master/IMDB-movies.csv")
-d = as_tibble(d)
+d = read_csv("https://raw.githubusercontent.com/difiore/ada-2021-datasets/master/IMDB-movies.csv") #reading in data
+head(d)
 
+#pipe operation to create new d_filtered tibble that filters as desired
 d %>% 
   filter(startYear>=1920 & startYear<=1979 & runtimeMinutes >= 60 & runtimeMinutes <= 180) %>% 
   mutate(decade = paste0(substr(startYear,3,3),"0s")) -> d_filtered
+nrow(d_filtered)
+ggplot(d_filtered, aes(x = runtimeMinutes)) + geom_histogram() + facet_wrap(vars(decade)) #plotting histograms of run minutes for each decade
 
-ggplot(d_filtered, aes(x = runtimeMinutes)) + geom_histogram() + facet_wrap(vars(decade))
 
 d_filtered %>%
   group_by(decade) %>%
@@ -39,29 +38,56 @@ d_filtered %>%
   group_by(decade) %>%
   sample_n(100, replace = FALSE) %>%
   summarize(mean = mean(runtimeMinutes),sd = sd(runtimeMinutes)) -> sample_res
-
 sample_res$se = sample_res$sd/10
-
+results$se = results$sd/10
 ```
-COMPARE SMAPLE results to true results....
+
+```{r}
+results %>%
+  kable("html", align = 'clc', caption = 'Results') %>%
+    kable_styling(full_width = F, position = "left")
+sample_res %>%
+  kable("html", align = 'clc', caption = 'Results after Sampling') %>%
+    kable_styling(full_width = F, position = "left")
+```
+
+COMPARE SMAPLE results to true results....print out table and compare in words the two
 
 ```{r}
 reps = 1000
 n = 100
-d_filtered %>%
-  group_by(decade) %>%
-  rerun(reps,  ->samp_dist_mean
-samp_dist_mean = do(reps) * mean(~runtimeMinutes, data = sample_n(d_filtered$decade, size = n, replace = FALSE)))
-s
+for (i in names(table(d_filtered$decade))){
+  subset = d_filtered[d_filtered$decade==i,]
+  A = do(reps)*summarize(.data = sample_n(subset, size = n, replace = FALSE),mean = mean(runtimeMinutes),sd = sd(runtimeMinutes)) 
+  assign(paste0(i,"_sampMean"),A)
+  }
+```
 
-samp_dist_median = do(reps) * median(~runtimeMinutes, data = sample_n(d_filtered %>% group_by(decade), size = 100, replace = FALSE))
+##Sampling Distributions
+```{r}
+#20s
+('20sMean' = mean(`20s_sampMean`$mean))
+hist(`20s_sampMean`$mean, main = "Histogram of 20s Sampling Distrubtion", xlab = "Mean runtime (min.)")
+#30s
+('30sMean' = mean(`30s_sampMean`$mean))
+hist(`30s_sampMean`$mean, main = "Histogram of 30s Sampling Distrubtion", xlab = "Mean runtime (min.)")
+#40s
+('40sMean' = mean(`40s_sampMean`$mean))
+hist(`40s_sampMean`$mean, main = "Histogram of 40s Sampling Distrubtion", xlab = "Mean runtime (min.)")
+#50s
+('50sMean' = mean(`50s_sampMean`$mean))
+hist(`50s_sampMean`$mean, main = "Histogram of 50s Sampling Distrubtion", xlab = "Mean runtime (min.)")
+#60s
+('60sMean' = mean(`60s_sampMean`$mean))
+hist(`60s_sampMean`$mean, main = "Histogram of 60s Sampling Distrubtion", xlab = "Mean runtime (min.)")
+#70s
+('70sMean' = mean(`70s_sampMean`$mean))
+hist(`70s_sampMean`$mean, main = "Histogram of 70s Sampling Distrubtion", xlab = "Mean runtime (min.)")
+```
+Comment on shape of distributions
+
+```{r}
+
 
 ```
 
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
-```
-
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
