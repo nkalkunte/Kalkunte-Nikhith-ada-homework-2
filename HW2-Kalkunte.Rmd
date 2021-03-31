@@ -97,5 +97,82 @@ Comment on SEs - Sampling distribution looks to be fairly off...
 
 #Challenge 2
 ```{r}
+ppois(9, lambda=12)
+ppois(0, lambda=12)
+ppois(5, lambda=12)-ppois(4, lambda=12)
+1-ppois(18, lambda=12)
+
+x = 0:24
+y = dpois(x, lambda=12) 
+barplot(
+  y,
+  ylim = c(0, 0.5),
+  names.arg = x,
+  space = 0.1,
+  xlab = "outcome",
+  ylab = "Pr(X = outcome)",
+  main = "Probability Mass Function"
+)
+
+Z = rpois(1460,12)
+hist(Z,xlim = c(0,24))
+```
+How do your simulated results compare to the shape of the probability mass function you plotted above?
+
+#Challenge 3
+```{r}
+d = read.csv("https://raw.githubusercontent.com/difiore/ada-2021-datasets/master/zombies.csv")
+d_numeric = d[,c(5,6,7,8)]
+n = nrow(d_numeric)
+(m.POP = apply(d_numeric,2,mean))
+(sd.POP = apply(d_numeric,2,sd)*sqrt((n-1)/n))
+d_new = cbind(d_numeric,gender = d$gender)
+```
+##Boxplots
+```{r}
+ggplot(d,aes(x = factor(0), y = height)) + geom_boxplot(na.rm = TRUE, outlier.shape = NA) +
+  theme(
+    axis.title.x = element_blank(),
+    axis.text.x = element_blank(),
+    axis.ticks.x = element_blank()
+  )+
+  facet_grid(~gender)
+
+ggplot(d,aes(x = factor(0), y = weight)) + geom_boxplot(na.rm = TRUE, outlier.shape = NA) +
+  theme(
+    axis.title.x = element_blank(),
+    axis.text.x = element_blank(),
+    axis.ticks.x = element_blank()
+  )+
+  facet_grid(~gender)
+
+ggplot(d,aes(x = factor(0), y = zombies_killed)) + geom_boxplot(na.rm = TRUE, outlier.shape = NA) +
+  theme(
+    axis.title.x = element_blank(),
+    axis.text.x = element_blank(),
+    axis.ticks.x = element_blank()
+  )+
+  facet_grid(~gender)
+
+ggplot(d,aes(x = factor(0), y = years_of_education)) + geom_boxplot(na.rm = TRUE, outlier.shape = NA) +
+  theme(
+    axis.title.x = element_blank(),
+    axis.text.x = element_blank(),
+    axis.ticks.x = element_blank()
+  )+
+  facet_grid(~gender)
+```
+##Scaterplots
+```{r}
+ggplot(d,aes(x = age, y = weight)) + geom_point(aes(color =gender))
+ggplot(d,aes(x = age, y = height)) + geom_point(aes(color =gender))
+```
+There seems to be a no relationship between weight and age,though males look to have a higher average weight than females at all ages. There seems to be a positive relationship between age and height with again a higher mean height for males at any age vs females.
+
+##Normal Distribution
+```{r}
 
 ```
+
+
+
