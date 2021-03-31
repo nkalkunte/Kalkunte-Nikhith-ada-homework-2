@@ -8,7 +8,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 
-```{r, echo = FALSE}
+```{r, include=FALSE}
 library(tidyverse)
 library(magrittr)
 library(mosaic)
@@ -17,7 +17,7 @@ library(kableExtra)
 
 ```
 
-#Challenge 1
+# Challenge 1
 ```{r}
 d = read_csv("https://raw.githubusercontent.com/difiore/ada-2021-datasets/master/IMDB-movies.csv") #reading in data
 head(d)
@@ -34,15 +34,15 @@ d_filtered %>%
   group_by(decade) %>%
   summarize(mean = mean(runtimeMinutes),sd = sd(runtimeMinutes)) -> results
 
+results
+
 d_filtered %>%
   group_by(decade) %>%
   sample_n(100, replace = FALSE) %>%
   summarize(mean = mean(runtimeMinutes),sd = sd(runtimeMinutes)) -> sample_res
 sample_res$se = sample_res$sd/10
 results$se = results$sd/10
-```
 
-```{r}
 results %>%
   kable("html", align = 'clc', caption = 'Results') %>%
     kable_styling(full_width = F, position = "left")
@@ -51,7 +51,7 @@ sample_res %>%
     kable_styling(full_width = F, position = "left")
 ```
 
-COMPARE SMAPLE results to true results....print out table and compare in words the two
+Estimates are slightly off from true values but are well within one standard error off.  
 
 ```{r}
 reps = 1000
@@ -63,7 +63,7 @@ for (i in names(table(d_filtered$decade))){
   }
 ```
 
-##Sampling Distributions
+## Sampling Distributions
 ```{r}
 #20s
 ('20sMean' = summarize(.data = `20s_sampMean`, mean = mean(`20s_sampMean`$mean), sd = sd(`20s_sampMean`$mean)))
@@ -84,7 +84,7 @@ hist(`60s_sampMean`$mean, main = "Histogram of 60s Sampling Distrubtion", xlab =
 ('70sMean' = summarize(.data = `70s_sampMean`, mean = mean(`70s_sampMean`$mean), sd = sd(`70s_sampMean`$mean)))
 hist(`70s_sampMean`$mean, main = "Histogram of 70s Sampling Distrubtion", xlab = "Mean runtime (min.)")
 ```
-Comment on shape of distributions
+All histograms show a normal distribution. 
 
 ```{r}
 samplingSE = c(`20sMean`$sd,`30sMean`$sd,`40sMean`$sd,`50sMean`$sd,`60sMean`$sd,`70sMean`$sd)
@@ -93,9 +93,9 @@ rownames(sErrors) = names(table(d_filtered$decade))
 colnames(sErrors) = c("True Population","100 Samples","Sampling Dist.")
 sErrors
 ```
-Comment on SEs - Sampling distribution looks to be fairly off...
+The standard errors look to be close for the true population and when derived from 100 samples. We see some larger variances in SE in decade 20 an 30, but this can be attributed to closer population sizes to the  100 used for SE calculation. 
 
-#Challenge 2
+# Challenge 2
 ```{r}
 ppois(9, lambda=12)
 ppois(0, lambda=12)
@@ -117,9 +117,9 @@ barplot(
 Z = rpois(1460,12)
 hist(Z,xlim = c(0,24))
 ```
-How do your simulated results compare to the shape of the probability mass function you plotted above?
+Simulated results looks slightly less normal than the true PMF. This may be attributed to the seed location of the random number generator.
 
-#Challenge 3
+# Challenge 3
 ```{r}
 d = read.csv("https://raw.githubusercontent.com/difiore/ada-2021-datasets/master/zombies.csv")
 d_numeric = d[,c(5,6,7,8)]
@@ -128,7 +128,7 @@ n = nrow(d_numeric)
 (sd.POP = apply(d_numeric,2,sd)*sqrt((n-1)/n))
 d_new = cbind(d_numeric,gender = d$gender)
 ```
-##Boxplots
+## Boxplots
 ```{r}
 ggplot(d,aes(x = factor(0), y = height)) + geom_boxplot(na.rm = TRUE, outlier.shape = NA) +
   theme(
@@ -162,17 +162,50 @@ ggplot(d,aes(x = factor(0), y = years_of_education)) + geom_boxplot(na.rm = TRUE
   )+
   facet_grid(~gender)
 ```
-##Scaterplots
+## Scaterplots
 ```{r}
 ggplot(d,aes(x = age, y = weight)) + geom_point(aes(color =gender))
 ggplot(d,aes(x = age, y = height)) + geom_point(aes(color =gender))
 ```
 There seems to be a no relationship between weight and age,though males look to have a higher average weight than females at all ages. There seems to be a positive relationship between age and height with again a higher mean height for males at any age vs females.
 
-##Normal Distribution
+## Normal Distribution
 ```{r}
+for (i in 1:ncol(d_numeric)){
+hist(d_numeric[,i], main = names(d_numeric)[i],xlab = names(d_numeric)[i])
+qqnorm(d_numeric[,i], main = paste0("QQ Plot - ", names(d_numeric)[i]))
+qqline(d_numeric[,i], col = "gray")
+}
+
 
 ```
+Height and weight look to be drawn from normal distributions. Zombies killed and years of education looks to be from  poisson distributions as we have and increase in high frequency at lower values with a quick decay at higher values. 
+
+```{r}
+n=50
+samp = sample_n(d_numeric,n,replace = FALSE)
+(m.samp = apply(samp, 2, mean))
+(sd.samp = apply(samp, 2, sd))
+(se.samp = sd.samp/sqrt(n))
+
+CI <- function(x, level = 0.95) {
+  alpha <- 1 - level
+  ci <- mean(x) + c(-1, 1) * qnorm(1 - (alpha / 2)) * sqrt(var(x) / length(x))
+  return(ci)
+}
+
+(cis = apply(samp,2,CI))
+
+means.samp =  m.samp
+for (i in 2:100){
+  a = apply(sample_n(d_numeric,n,replace = FALSE),2,mean)
+  means.samp = rbind(means.samp,a)
+}
+(m.samp.dist = apply(means.samp, 2, mean))
+(sd.samp.dist = apply(means.samp, 2, sd))
+(cis = apply(means.samp,2,CI))
+```
+The 95% CI produced from simulation has much tighter bounds than those produce via only 100 samples. This makes sense as per the CLT, as number of samples increase, the closer our estimate becomes to the true population value. 
 
 
 
